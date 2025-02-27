@@ -1,0 +1,3 @@
+br/com/cateno/auth/App.class
+br/com/cateno/auth/LoginEventListenerProvider.class
+br/com/cateno/auth/LoginEventListenerProviderFactory.class
